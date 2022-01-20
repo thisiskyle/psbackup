@@ -3,7 +3,7 @@
 A simple powershell script for backing up files.
 
 
----
+
 ## Installation
 
 * Clone this repo into a PowerShell modules directory, this is the location I use
@@ -20,14 +20,17 @@ Import-Module PSBackup
 * Restart PowerShell if needed
 
 
----
+
+
 ## Usage
 
 In PowerShell just run
 ```
 Start-PSBackup \path\to\job\file.json
 ```
----
+
+
+
 ## About the Job File
 
 The job file is just a json file with list of jobs. A job contains the rules for backing up
