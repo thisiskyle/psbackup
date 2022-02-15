@@ -1,6 +1,12 @@
+function Log($message)
+{
+    Write-Host $message
+    Add-Content -Path $($script:logFile) -Value $($message)
+}
+
 function CopyFile($f, $p, $i)
 {
-    Write-Host "Backing up $($f.FullName) to $($finalFilePath)"
+    Log("Backing up $($f.FullName) to $($finalFilePath)")
     Copy-Item -Recurse -Force -Path $f.FullName -Destination $finalFilePath
     if(-Not $i)
     {
@@ -10,7 +16,7 @@ function CopyFile($f, $p, $i)
 
 function DoBackup($job)
 {
-    Write-Host "--- Running Job: $($job.name) ---"
+    Log("`n--- Running Job: $($job.name) ---`n")
 
     $sources = $job.sources
     $root = $job.sourceRoot
@@ -29,7 +35,7 @@ function DoBackup($job)
 
         if (-Not (Test-Path $s)) 
         {
-            Write-Host "WARNING: Source $($s) does not exist"
+            Log("WARNING: Source $($s) does not exist")
             continue;
         }
 
@@ -68,7 +74,7 @@ function DoBackup($job)
                     # if the file exists, check the modified date
                     if ($f.LastWriteTime -eq $(Get-Item -Force $finalFilePath).LastWriteTime)
                     {
-                        Write-Host "$($f.FullName) is up to date on $($finalFilePath)"
+                        Log("$($f.FullName) is up to date on $($finalFilePath)")
                     }
                     else
                     {
@@ -84,32 +90,62 @@ function DoBackup($job)
     }
 }
 
-function Start-PSBackup($jobFile)
+function Start-PSBackup()
 {
+    param(
+        [Parameter(Mandatory=$true)] [string] $jobFileInfo,
+        [Parameter(Mandatory=$false)] [switch] $FullPath
+    )
 
-    if($jobFile -eq "")
+    # create the home psbackup directory if it doesnt exist
+    if (-Not (Test-Path "$($HOME)\psbackup\"))
     {
-        Write-Host ""
-        Write-Host "ERROR: No job file provided"
-        Write-Host ""
+        New-Item -Path "$($HOME)\psbackup" -ItemType Directory -Force | Out-Null
+    }
+
+    # create the log directory if it doesnt exist
+    if (-Not (Test-Path "$($HOME)\psbackup\log"))
+    {
+        New-Item -Path "$($HOME)\psbackup\log" -ItemType Directory -Force | Out-Null
+    }
+
+    $script:logFile = "$($HOME)\psbackup\log\$(Get-Date -Format "yyyyMMdd_HHmm").txt"
+
+    if (-Not (Test-Path $script:logFile))
+    {
+        New-Item -Path "$($script:logFile)" -ItemType File -Force | Out-Null
+    }
+
+    # if the jobfile is empty
+    if($jobFileInfo -eq "")
+    {
+        Log("`nERROR: No job file name provided`n")
         return
     }
+
+    # If the FullPath switch is present then the path provide is
+    # the full path to the job file, use it as is.
+    # If not, then we assume the job file is in the $HOME\psbackup directory
+    if($FullPath.IsPresent)
+    {
+        $jobFile = "$($jobFileInfo)"
+    }
+    else
+    {
+        $jobFile = "$($HOME)\psbackup\$($jobFileInfo).json"
+    }
+
 
     if (-Not (Test-Path $jobFile))
     {
-        Write-Host ""
-        Write-Host "ERROR: File '$($jobFile)' not found"
-        Write-Host ""
+        Log("`nERROR: File '$($jobFile)' not found`n")
         return
     }
 
-    Write-Host ""
-    Write-Host "-------------------------------------------------------"
-    Write-Host "PSBackup  -  $(Get-Date -Format "yyyy/MM/dd HH:mm")"
-    Write-Host ""
-    Write-Host "Job File: $($jobFile)"
-    Write-Host "-------------------------------------------------------"
-    Write-Host ""
+    Log("`n-------------------------------------------------------")
+    Log("PSBackup  -  $(Get-Date -Format "yyyy/MM/dd HH:mm")`n")
+    Log("Job File: $($jobFile)")
+    Log("-------------------------------------------------------")
 
     Start-Sleep -Milliseconds 1000
 
@@ -129,13 +165,12 @@ function Start-PSBackup($jobFile)
         $script:totalJobs += 1
     }
 
-    Write-Host ""
-    Write-Host "------------------- Summary ---------------------------"
-    Write-Host "Job File        $($jobFile)"
-    Write-Host "Active Jobs     $($script:activeJobs)/$($script:totalJobs)"
-    Write-Host "Files Updated   $($script:updatedCount)/$($script:totalCount)"
-    Write-Host "-------------------------------------------------------"
-    Write-Host ""
+    Log("`n------------------- Summary ---------------------------")
+    Log("Job File        $($jobFile)")
+    Log("Log File        $($logFile)")
+    Log("Active Jobs     $($script:activeJobs)/$($script:totalJobs)")
+    Log("Files Updated   $($script:updatedCount)/$($script:totalCount)")
+    Log("-------------------------------------------------------`n")
 }
 
 Export-ModuleMember -Function Start-PSBackup

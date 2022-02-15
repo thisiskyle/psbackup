@@ -7,16 +7,21 @@ A simple powershell script for backing up files.
 ## Installation
 
 * Clone this repo into a PowerShell modules directory, this is the location I use
-```
-git clone https://github.com/thisiskyle/psbackup.git C:\Users\UserName\Documents\PowerShell\Modules\PSBackup
-```
+
+    ```
+    git clone https://github.com/thisiskyle/psbackup.git C:\Users\UserName\Documents\PowerShell\Modules\PSBackup
+    ```
 
 * Add this line to your ```Profile.ps1``` file
-```
-Import-Module PSBackup
-```
 
-* Create your job file, store it anywhere
+    ```
+    Import-Module PSBackup
+    ```
+
+* Create your job file. 
+     - This should be stored in your users home directory something like ```C:\Users\<username>\psbackup\jobfile.json```  
+       but you can also store is elsewhere as explained below in the 'Usage' section
+
 * Restart PowerShell if needed
 
 
@@ -26,7 +31,16 @@ Import-Module PSBackup
 
 In PowerShell just run
 ```
-Start-PSBackup \path\to\job\file.json
+Start-PSBackup jobFileName
+```
+
+When using the above command some assumptions will be made.   
+It will look for a job file named ```jobFileName.json``` located in the ```C:\Users\<username>\psbackup\``` directory.
+
+
+To use an explicit path use the ```-FullPath``` switch
+```
+Start-PSBackup -FullPath full\path\to\jobFile.json
 ```
 
 
@@ -39,7 +53,7 @@ the desired files to the desired location(s).
 
 ### Example Job File
 
-****Note the escaped backslashes**
+****Note the escaped backslashes****
 
 ```
 [
