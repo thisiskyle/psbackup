@@ -61,8 +61,21 @@ function DoBackup($job)
 
             for (($i = 0); $i -lt $destinations.Count; $i++)
             {
+
+                # this is for the network drive, for some reason it doesnt add the backslash to the path
+                # so we just check and add one if needed
+                if(-Not $destinations[$i].EndsWith("\") -And -Not $subpath.StartsWith("\"))
+                {
+                    $finalDestinationDir = "$($destinations[$i])\$($subpath)"
+                }
+                else
+                {
+                    $finalDestinationDir = "$($destinations[$i])$($subpath)"
+                }
+
+
+
                 # create new destination structure using that list
-                $finalDestinationDir = "$($destinations[$i])$($subpath)"
                 $finalFilePath = "$($finalDestinationDir)\$($f.Name)"
 
                 # create all missing folders
